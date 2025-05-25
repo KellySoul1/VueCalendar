@@ -1,7 +1,7 @@
-// Отключение предупреждений в режиме разработки
+
 Vue.config.productionTip = false;
 
-// Создание экземпляра Vue
+
 new Vue({
     el: '#app',
     data: {
@@ -18,27 +18,27 @@ new Vue({
             title: '',
             time: '12:00'
         },
-        // Поиск по событиям
+
         searchQuery: '',
         showSearchResults: false,
-        // Модальное окно подтверждения
+
         showConfirmModal: false,
         pendingAction: null,
         pendingActionParams: null,
-        // Drag-and-drop
+
         draggedEventIndex: null,
         draggedEventDate: null,
         draggingOverDate: null,
-        // Горячие клавиши
+
         showKeyboardShortcuts: false,
-        // Флаг для отслеживания изменений
+
         hasUnsavedChanges: false,
-        // Темная тема
+
         darkTheme: false
     },
     
     computed: {
-        // Текущий месяц и год
+
         currentMonth() {
             return this.currentDate.getMonth();
         },
@@ -47,12 +47,12 @@ new Vue({
             return this.currentDate.getFullYear();
         },
         
-        // Название текущего месяца
+
         currentMonthName() {
             return this.months[this.currentMonth];
         },
         
-        // Фильтрация событий по поисковому запросу
+
         filteredEvents() {
             if (!this.searchQuery.trim()) {
                 return [];
@@ -61,19 +61,19 @@ new Vue({
             const query = this.searchQuery.toLowerCase().trim();
             const result = [];
             
-            // Перебираем все события во всех датах
+
             for (const dateKey in this.events) {
                 const dateEvents = this.events[dateKey];
                 const dateParts = dateKey.split('-');
                 const eventDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
                 
-                // Фильтруем события по запросу
+
                 const matchingEvents = dateEvents.filter(event => {
                     return event.title.toLowerCase().includes(query) || 
                            event.time.toLowerCase().includes(query);
                 });
                 
-                // Добавляем дату к найденным событиям
+
                 matchingEvents.forEach(event => {
                     result.push({
                         ...event,
@@ -82,13 +82,13 @@ new Vue({
                 });
             }
             
-            // Сортируем по дате и времени
+
             return result.sort((a, b) => {
-                // Сначала сортируем по дате
+
                 const dateCompare = a.date.getTime() - b.date.getTime();
                 if (dateCompare !== 0) return dateCompare;
                 
-                // Если даты одинаковые, сортируем по времени
+
                 return a.time.localeCompare(b.time);
             });
         },
@@ -169,7 +169,7 @@ new Vue({
     },
     
     methods: {
-        // Методы для управления темой
+
         toggleTheme() {
             this.darkTheme = !this.darkTheme;
             if (this.darkTheme) {
@@ -199,7 +199,7 @@ new Vue({
             }
         },
         
-        // Методы навигации по календарю
+
         previousMonth() {
             this.currentDate = new Date(this.currentYear, this.currentMonth - 1, 1);
             this.keyboardFocusedDate = new Date(this.currentYear, this.currentMonth, 1);
@@ -220,7 +220,7 @@ new Vue({
             this.keyboardFocusedDate = new Date(this.currentYear, this.currentMonth, 1);
         },
         
-        // Обработка клавиатурных событий
+
         handleKeyDown(event) {
             if (this.showConfirmModal && event.key === 'Escape') {
                 this.cancelAction();
@@ -269,20 +269,20 @@ new Vue({
                    date.getFullYear() === this.keyboardFocusedDate.getFullYear();
         },
         
-        // Форматирование даты для отображения в результатах поиска
+
         formatDateForSearch(date) {
             const options = { day: 'numeric', month: 'long' };
             return date.toLocaleDateString('ru-RU', options);
         },
         
-        // Выбор результата поиска
+
         selectSearchResult(event) {
             this.selectDate(event.date);
             this.searchQuery = '';
             this.showSearchResults = false;
         },
         
-        // Методы для модального окна подтверждения
+
         confirmAction() {
             if (this.pendingAction === 'selectDate') {
                 this.selectedDate = new Date(this.pendingActionParams);
@@ -360,20 +360,20 @@ new Vue({
             }
         },
         
-        // Методы для drag-and-drop
+
         handleDragStart(event, index) {
             this.draggedEventIndex = index;
             this.draggedEventDate = new Date(this.selectedDate);
             event.target.classList.add('dragging');
             
-            // Сохраняем данные о событии в dataTransfer
+
             const eventData = this.eventsForSelectedDate[index];
             event.dataTransfer.setData('text/plain', JSON.stringify(eventData));
             event.dataTransfer.effectAllowed = 'move';
         },
         
         handleDragOver(event, date) {
-            event.preventDefault(); // Важно для разрешения сброса
+            event.preventDefault();
             this.draggingOverDate = date;
         },
         
@@ -391,38 +391,38 @@ new Vue({
         },
         
         handleDrop(event, targetDate) {
-            event.preventDefault();  // Важно для обработки сброса
-            event.stopPropagation(); // Останавливаем всплытие события
+            event.preventDefault();
+            event.stopPropagation();
             
             if (this.draggedEventIndex === null || this.draggedEventDate === null) {
                 this.handleDragEnd();
                 return;
             }
             
-            // Проверяем, является ли targetDate объектом Date
+
             if (!(targetDate instanceof Date)) {
                 console.error("targetDate is not a Date object:", targetDate);
                 this.handleDragEnd();
                 return;
             }
             
-            // Проверяем, является ли draggedEventDate действительным объектом Date
+
             if (!(this.draggedEventDate instanceof Date)) {
                 console.error("draggedEventDate is not a Date object:", this.draggedEventDate);
                 this.handleDragEnd();
                 return;
             }
             
-            // Если перетаскиваем на тот же день, обрабатываем перемещение внутри списка
+
             if (targetDate.getTime() === this.draggedEventDate.getTime()) {
-                // Получаем все элементы списка событий
+
                 const eventItems = Array.from(document.querySelectorAll('.event-item'));
                 const draggedItem = document.querySelector('.event-item.dragging');
                 if (draggedItem) {
-                    // Находим новый индекс перетаскиваемого элемента
+
                     const newIndex = eventItems.indexOf(draggedItem);
                     
-                    // Если индекс изменился, перемещаем событие в массиве
+
                     if (newIndex !== -1 && newIndex !== this.draggedEventIndex) {
                         const dateKey = this.formatDateKey(this.selectedDate);
                         const event = {...this.events[dateKey][this.draggedEventIndex]};
@@ -435,7 +435,7 @@ new Vue({
                 return;
             }
             
-            // Перемещение между разными датами
+
             const sourceKey = this.formatDateKey(this.draggedEventDate);
             const targetKey = this.formatDateKey(targetDate);
             
@@ -463,14 +463,14 @@ new Vue({
             this.handleDragEnd();
         },
         
-        // Проверка перетаскивания над датой
+
         isDraggingOver(date) {
             if (!this.draggingOverDate) return false;
             
-            // Проверяем, является ли date объектом Date
+
             if (!(date instanceof Date)) return false;
             
-            // Проверяем, является ли draggingOverDate объектом Date
+
             if (!(this.draggingOverDate instanceof Date)) return false;
             
             return date.getDate() === this.draggingOverDate.getDate() &&
@@ -480,19 +480,19 @@ new Vue({
     },
     
     created() {
-        // Загружаем сохраненные события
+
         this.loadEvents();
         
-        // Устанавливаем сегодняшний день как выбранную дату
+
         this.selectedDate = new Date();
         this.keyboardFocusedDate = new Date();
         
-        // Загружаем настройки темы
+
         this.loadThemeSettings();
     },
     
     mounted() {
-        // Добавляем обработчик для предотвращения закрытия страницы с несохраненными данными
+
         window.addEventListener('beforeunload', (e) => {
             if (this.hasUnsavedChanges) {
                 e.preventDefault();
@@ -500,12 +500,12 @@ new Vue({
             }
         });
         
-        // Устанавливаем фокус на корневой элемент для работы клавиатурной навигации
+
         this.$refs.appRoot.focus();
     },
     
     beforeDestroy() {
-        // Удаляем обработчик при уничтожении компонента
+
         window.removeEventListener('beforeunload');
     }
 });
