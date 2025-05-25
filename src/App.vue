@@ -3,13 +3,13 @@
     <div class="calendar-container">
       <div class="calendar-header">
         <div class="header-controls">
-          <button @click="previousYear" class="year-button">&lt;&lt;</button>
-          <button @click="previousMonth" class="month-button">&lt;</button>
+          <button @click="changeYear(-1)" class="year-button">&lt;&lt;</button>
+          <button @click="changeMonth(-1)" class="month-button">&lt;</button>
         </div>
         <h2>{{ currentMonthName }} {{ currentYear }}</h2>
         <div class="header-controls">
-          <button @click="nextMonth" class="month-button">&gt;</button>
-          <button @click="nextYear" class="year-button">&gt;&gt;</button>
+          <button @click="changeMonth(1)" class="month-button">&gt;</button>
+          <button @click="changeYear(1)" class="year-button">&gt;&gt;</button>
         </div>
       </div>
       <div class="weekdays">
@@ -60,17 +60,10 @@ export default {
   name: 'App',
   data() {
     return {
-      // Информация о текущей дате
       currentDate: new Date(),
       selectedDate: null,
-      
-      // Данные календаря
       weekdays: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
-      
-      // Хранилище событий
       events: {},
-      
-      // Данные формы нового события
       newEvent: {
         title: '',
         time: ''
@@ -79,99 +72,38 @@ export default {
   },
   
   computed: {
-    /**
-     * Получить текущий месяц в виде числа (0-11)
-     */
     currentMonth() {
       return this.currentDate.getMonth();
     },
     
-    /**
-     * Получить текущий год
-     */
     currentYear() {
       return this.currentDate.getFullYear();
     },
     
-    /**
-     * Получить название текущего месяца
-     */
     currentMonthName() {
       return new Date(this.currentYear, this.currentMonth, 1)
         .toLocaleString('default', { month: 'long' });
     },
     
-    /**
-     * Вычислить все дни, которые будут отображаться в сетке календаря
-     * Включая дни из предыдущего и следующего месяцев для заполнения сетки
-     */
     calendarDays() {
       const days = [];
-      
-      // Получить первый день месяца
       const firstDay = new Date(this.currentYear, this.currentMonth, 1);
-      
-      // Получить день недели для первого дня (0 = Воскресенье, 1 = Понедельник и т.д.)
-      // Преобразовать в индекс, где понедельник = 0, воскресенье = 6
-      let firstDayIndex = firstDay.getDay() - 1;
-      if (firstDayIndex < 0) firstDayIndex = 6; // Воскресенье становится 6
-      
-      // Получить последний день месяца
+      let firstDayIndex = this.getAdjustedDayIndex(firstDay);
       const lastDay = new Date(this.currentYear, this.currentMonth + 1, 0);
       const daysInMonth = lastDay.getDate();
-      
-      // Получить последний день предыдущего месяца
       const prevMonthLastDay = new Date(this.currentYear, this.currentMonth, 0).getDate();
-      
-      // Получить сегодняшнюю дату для выделения
       const today = new Date();
       const isCurrentMonth = today.getMonth() === this.currentMonth && 
                             today.getFullYear() === this.currentYear;
       const todayDate = today.getDate();
       
-      // Добавить дни из предыдущего месяца
-      for (let i = 0; i < firstDayIndex; i++) {
-        const day = prevMonthLastDay - firstDayIndex + i + 1;
-        const date = new Date(this.currentYear, this.currentMonth - 1, day);
-        days.push({
-          date: date,
-          dayNumber: day,
-          currentMonth: false,
-          isToday: false
-        });
-      }
-      
-      // Добавить дни текущего месяца
-      for (let i = 1; i <= daysInMonth; i++) {
-        const date = new Date(this.currentYear, this.currentMonth, i);
-        days.push({
-          date: date,
-          dayNumber: i,
-          currentMonth: true,
-          isToday: isCurrentMonth && i === todayDate
-        });
-      }
-      
-      // Вычислить, сколько дней нам нужно из следующего месяца
-      const remainingDays = 42 - days.length; // 6 рядов по 7 дней
-      
-      // Добавить дни из следующего месяца
-      for (let i = 1; i <= remainingDays; i++) {
-        const date = new Date(this.currentYear, this.currentMonth + 1, i);
-        days.push({
-          date: date,
-          dayNumber: i,
-          currentMonth: false,
-          isToday: false
-        });
-      }
+      this.addPreviousMonthDays(days, firstDayIndex, prevMonthLastDay);
+      this.addCurrentMonthDays(days, daysInMonth, isCurrentMonth, todayDate);
+      this.addNextMonthDays(days);
       
       return days;
     },
     
-    /**
-     * Форматировать выбранную дату для отображения
-     */
     formatSelectedDate() {
       if (!this.selectedDate) return '';
       
@@ -183,9 +115,6 @@ export default {
       });
     },
     
-    /**
-     * Получить события для выбранной даты
-     */
     eventsForSelectedDate() {
       if (!this.selectedDate) return [];
       
@@ -195,152 +124,137 @@ export default {
   },
   
   methods: {
-    
-    /**
-     * Перейти к предыдущему месяцу
-     */
-    previousMonth() {
-      this.currentDate = new Date(this.currentYear, this.currentMonth - 1, 1);
+    formatDateKey(date) {
+      return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
     },
     
-    /**
-     * Перейти к следующему месяцу
-     */
-    nextMonth() {
-      this.currentDate = new Date(this.currentYear, this.currentMonth + 1, 1);
+    changeMonth(offset) {
+      this.currentDate = new Date(this.currentYear, this.currentMonth + offset, 1);
     },
     
-    /**
-     * Перейти к предыдущему году
-     */
-    previousYear() {
-      this.currentDate = new Date(this.currentYear - 1, this.currentMonth, 1);
+    changeYear(offset) {
+      this.currentDate = new Date(this.currentYear + offset, this.currentMonth, 1);
     },
     
-    /**
-     * Перейти к следующему году
-     */
-    nextYear() {
-      this.currentDate = new Date(this.currentYear + 1, this.currentMonth, 1);
-    },
-    
-    /**
-     * Перейти к предыдущему году
-     */
-    previousYear() {
-      this.currentDate = new Date(this.currentYear - 1, this.currentMonth, 1);
-    },
-    
-    /**
-     * Перейти к следующему году
-     */
-    nextYear() {
-      this.currentDate = new Date(this.currentYear + 1, this.currentMonth, 1);
-    },
-    
-    /**
-     * Выбрать дату для просмотра/редактирования событий
-     */
     selectDate(date) {
       this.selectedDate = new Date(date);
       this.newEvent.title = '';
       this.newEvent.time = '';
     },
     
-    /**
-     * Проверить, является ли дата текущей выбранной датой
-     */
     isSelected(date) {
-      if (!this.selectedDate) return false;
+      if (!this.selectedDate || !date) return false;
       
       return date.getDate() === this.selectedDate.getDate() &&
-              date.getMonth() === this.selectedDate.getMonth() &&
-              date.getFullYear() === this.selectedDate.getFullYear();
+             date.getMonth() === this.selectedDate.getMonth() &&
+             date.getFullYear() === this.selectedDate.getFullYear();
     },
     
-    /**
-     * Форматировать дату как ключ для объекта событий
-     */
-    formatDateKey(date) {
-      return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+    getAdjustedDayIndex(date) {
+      let dayIndex = date.getDay() - 1;
+      if (dayIndex < 0) dayIndex = 6;
+      return dayIndex;
     },
     
-    /**
-     * Проверить, есть ли у даты события
-     */
+    addPreviousMonthDays(days, firstDayIndex, prevMonthLastDay) {
+      for (let i = 0; i < firstDayIndex; i++) {
+        const day = prevMonthLastDay - firstDayIndex + i + 1;
+        const date = new Date(this.currentYear, this.currentMonth - 1, day);
+        days.push({
+          date: date,
+          dayNumber: day,
+          currentMonth: false,
+          isToday: false
+        });
+      }
+    },
+    
+    addCurrentMonthDays(days, daysInMonth, isCurrentMonth, todayDate) {
+      for (let i = 1; i <= daysInMonth; i++) {
+        const date = new Date(this.currentYear, this.currentMonth, i);
+        days.push({
+          date: date,
+          dayNumber: i,
+          currentMonth: true,
+          isToday: isCurrentMonth && i === todayDate
+        });
+      }
+    },
+    
+    addNextMonthDays(days) {
+      const remainingDays = 42 - days.length;
+      
+      for (let i = 1; i <= remainingDays; i++) {
+        const date = new Date(this.currentYear, this.currentMonth + 1, i);
+        days.push({
+          date: date,
+          dayNumber: i,
+          currentMonth: false,
+          isToday: false
+        });
+      }
+    },
+    
     hasEvents(date) {
+      if (!date) return false;
+      
       const dateKey = this.formatDateKey(date);
       return this.events[dateKey] && this.events[dateKey].length > 0;
     },
     
-    /**
-     * Добавить новое событие к выбранной дате
-     */
     addEvent() {
       if (!this.newEvent.title) return;
       
       const dateKey = this.formatDateKey(this.selectedDate);
       
       if (!this.events[dateKey]) {
-        this.$set(this.events, dateKey, []);
+        this.events[dateKey] = [];
       }
       
       this.events[dateKey].push({
         title: this.newEvent.title,
-        time: this.newEvent.time || '00:00'
+        time: this.newEvent.time || ''
       });
       
-      // Сортировать события по времени
-      this.events[dateKey].sort((a, b) => a.time.localeCompare(b.time));
+      this.events[dateKey].sort((a, b) => {
+        return a.time.localeCompare(b.time);
+      });
       
-      // Сбросить форму
       this.newEvent.title = '';
       this.newEvent.time = '';
       
-      // Сохранить в localStorage
       this.saveEvents();
     },
     
-    /**
-     * Удалить событие из выбранной даты
-     */
     removeEvent(index) {
       const dateKey = this.formatDateKey(this.selectedDate);
-      this.events[dateKey].splice(index, 1);
       
-      // Если для этой даты не осталось событий, удалить ключ даты
-      if (this.events[dateKey].length === 0) {
-        this.$delete(this.events, dateKey);
+      if (this.events[dateKey] && this.events[dateKey].length > index) {
+        this.events[dateKey].splice(index, 1);
+        
+        if (this.events[dateKey].length === 0) {
+          delete this.events[dateKey];
+        }
+        
+        this.saveEvents();
       }
-      
-      // Сохранить в localStorage
-      this.saveEvents();
     },
     
-    /**
-     * Сохранить события в localStorage
-     */
     saveEvents() {
-      localStorage.setItem('calendarEvents', JSON.stringify(this.events));
+      localStorage.setItem('calendar-events', JSON.stringify(this.events));
     },
     
-    /**
-     * Загрузить события из localStorage
-     */
     loadEvents() {
-      const savedEvents = localStorage.getItem('calendarEvents');
+      const savedEvents = localStorage.getItem('calendar-events');
+      
       if (savedEvents) {
         this.events = JSON.parse(savedEvents);
       }
     }
   },
   
-  // Инициализация компонента
   created() {
-    // Загрузить сохраненные события
     this.loadEvents();
-    
-    // Установить сегодняшний день как выбранную дату по умолчанию
     this.selectedDate = new Date();
   }
 }
