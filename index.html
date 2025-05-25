@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Календарь Vue</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Vue.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+</head>
+<body>
+    <div id="app" tabindex="0" @keydown="handleKeyDown" ref="appRoot">
+        <!-- Панель управления -->
+        <div class="control-panel">
+            <!-- Переключатель темы -->
+            <div class="theme-toggle">
+                <label class="switch">
+                    <input type="checkbox" id="themeToggle">
+                    <span class="slider round"></span>
+                </label>
+                <span class="theme-label" id="themeLabel">Светлая тема</span>
+            </div>
+            
+            <!-- Поиск по событиям -->
+            <div class="search-container">
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    placeholder="Поиск по событиям..." 
+                    v-model="searchQuery"
+                    @focus="showSearchResults = true"
+                    @keydown.esc="showSearchResults = false"
+                >
+                <div class="search-results" v-if="showSearchResults && filteredEvents.length > 0">
+                    <div 
+                        v-for="(event, index) in filteredEvents" 
+                        :key="index" 
+                        class="search-result-item"
+                        @click="selectSearchResult(event)"
+                    >
+                        <span class="search-result-date">{{ formatDateForSearch(event.date) }}</span>
+                        <span class="search-result-title">{{ event.title }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="calendar-container">
+                <div class="calendar-header">
+                    <button @click="previousYear">&lt;&lt;</button>
+                    <button @click="previousMonth">&lt;</button>
+                    <h2>{{ currentMonthName }} {{ currentYear }}</h2>
+                    <button @click="nextMonth">&gt;</button>
+                    <button @click="nextYear">&gt;&gt;</button>
+                </div>
+                <div class="weekdays">
+                    <div v-for="day in weekdays" :key="day" class="weekday">{{ day }}</div>
+                </div>
+                <div class="calendar-days">
+                    <div 
+                        v-for="(day, index) in calendarDays" 
+                        :key="index" 
+                        class="calendar-day" 
+                        :class="{ 
+                            'current-month': day.currentMonth, 
+                            'other-month': !day.currentMonth,
+                            'today': day.isToday,
+                            'selected': isSelected(day.date),
+                            'keyboard-focus': isKeyboardFocused(day.date),
+                            'dragging-over': isDraggingOver(day.date)
+                        }"
+                        @click="selectDate(day.date)"
+                        @dragover.prevent="handleDragOver(day.date)"
+                        @dragleave="handleDragLeave()"
+                        @drop.prevent="handleDrop(day.date)"
+                        tabindex="0"
+                        @keydown.enter="selectDate(day.date)"
+                    >
+                        {{ day.dayNumber }}
+                        <div v-if="hasEvents(day.date)" class="event-indicator"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="events-panel" v-if="selectedDate">
+                <h3>События на {{ formatSelectedDate }}</h3>
+                <div v-if="eventsForSelectedDate.length === 0" class="no-events">
+                    Нет событий на эту дату
+                </div>
+                <div v-else class="events-list">
+                    <div 
+                        v-for="(event, index) in eventsForSelectedDate" 
+                        :key="index" 
+                        class="event-item"
+                        draggable="true"
+                        @dragstart="handleDragStart($event, index)"
+                        @dragend="handleDragEnd()"
+                    >
+                        <div class="event-time">{{ event.time }}</div>
+                        <div class="event-title">{{ event.title }}</div>
+                        <button @click="removeEvent(index)" class="delete-btn">×</button>
+                    </div>
+                </div>
+                <div class="add-event">
+                    <input 
+                        v-model="newEvent.title" 
+                        placeholder="Название события" 
+                        @keydown.enter="addEvent"
+                        ref="eventTitleInput"
+                    />
+                    <input 
+                        v-model="newEvent.time" 
+                        type="time" 
+                        @keydown.enter="addEvent"
+                    />
+                    <button @click="addEvent" :disabled="!newEvent.title">Добавить</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Модальное окно подтверждения -->
+        <div class="modal-overlay" v-if="showConfirmModal">
+            <div class="modal-content">
+                <div class="modal-title">У вас есть несохраненные данные</div>
+                <p>Вы уверены, что хотите закрыть форму без сохранения?</p>
+                <div class="modal-actions">
+                    <button class="modal-btn modal-btn-secondary" @click="cancelAction">Отмена</button>
+                    <button class="modal-btn modal-btn-primary" @click="confirmAction">Продолжить</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Справка по горячим клавишам -->
+        <div class="keyboard-shortcuts" v-if="showKeyboardShortcuts">
+            <div class="shortcuts-header">
+                <h3>Горячие клавиши</h3>
+                <button @click="showKeyboardShortcuts = false" class="close-btn">×</button>
+            </div>
+            <ul class="shortcuts-list">
+                <li><span class="key">←</span> Предыдущий месяц</li>
+                <li><span class="key">→</span> Следующий месяц</li>
+                <li><span class="key">↑</span> Предыдущий год</li>
+                <li><span class="key">↓</span> Следующий год</li>
+                <li><span class="key">Enter</span> Выбрать дату / Добавить событие</li>
+                <li><span class="key">Esc</span> Закрыть поиск / модальное окно</li>
+                <li><span class="key">?</span> Показать/скрыть эту справку</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    
+    <!-- Простой JavaScript для переключения темы -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const themeLabel = document.getElementById('themeLabel');
+            
+            // Загрузка темы из localStorage
+            const savedTheme = localStorage.getItem('darkTheme');
+            if (savedTheme === 'true') {
+                document.documentElement.classList.add('dark-theme');
+                themeToggle.checked = true;
+                themeLabel.textContent = 'Тёмная тема';
+            }
+            
+            // Обработчик события переключения
+            themeToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    document.documentElement.classList.add('dark-theme');
+                    themeLabel.textContent = 'Тёмная тема';
+                    localStorage.setItem('darkTheme', 'true');
+                } else {
+                    document.documentElement.classList.remove('dark-theme');
+                    themeLabel.textContent = 'Светлая тема';
+                    localStorage.setItem('darkTheme', 'false');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

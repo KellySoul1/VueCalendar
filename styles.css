@@ -1,0 +1,647 @@
+:root {
+    /* Светлая тема */
+    --bg-color: #f5f5f5;
+    --card-bg: #ffffff;
+    --text-color: #333333;
+    --text-secondary: #666666;
+    --border-color: #d9d9d9;
+    --primary-color: #1890ff;
+    --primary-hover: #40a9ff;
+    --event-bg: #f9f9f9;
+    --event-hover: #f0f0f0;
+    --today-bg: #e6f7ff;
+    --selected-bg: #1890ff;
+    --selected-text: #ffffff;
+    --other-month-color: #cccccc;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --modal-overlay: rgba(0, 0, 0, 0.5);
+}
+
+.dark-theme {
+    /* Тёмная тема */
+    --bg-color: #121212;
+    --card-bg: #1e1e1e;
+    --text-color: #e0e0e0;
+    --text-secondary: #a0a0a0;
+    --border-color: #333333;
+    --primary-color: #177ddc;
+    --primary-hover: #1890ff;
+    --event-bg: #2c2c2c;
+    --event-hover: #383838;
+    --today-bg: #153450;
+    --selected-bg: #177ddc;
+    --selected-text: #ffffff;
+    --other-month-color: #666666;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    --modal-overlay: rgba(0, 0, 0, 0.7);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    padding: 20px;
+}
+
+#app {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: relative;
+    outline: none;
+}
+
+.main-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    width: 100%;
+}
+
+/* Стили для панели управления */
+.control-panel {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 15px;
+    background-color: var(--card-bg);
+    border-radius: 10px;
+    box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+/* Стили для переключателя темы */
+.theme-toggle {
+    display: flex;
+    align-items: center;
+}
+
+.theme-label {
+    margin-left: 10px;
+    font-size: 14px;
+    color: var(--text-color);
+}
+
+/* Переключатель в виде переключателя */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: var(--primary-color);
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px var(--primary-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.slider.round {
+    border-radius: 24px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+/* Стили для поиска */
+.search-container {
+    position: relative;
+    flex: 1;
+    max-width: 500px;
+    margin-left: 20px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 16px;
+    transition: all 0.3s;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+}
+
+.search-input:focus {
+    border-color: var(--primary-hover);
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+    outline: none;
+}
+
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.search-result-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.3s;
+}
+
+.search-result-item:hover {
+    background-color: #f0f0f0;
+}
+
+.search-result-date {
+    color: #1890ff;
+    font-weight: bold;
+}
+
+.search-result-title {
+    flex: 1;
+    margin-left: 10px;
+}
+
+.calendar-container {
+    background-color: var(--card-bg);
+    border-radius: 10px;
+    box-shadow: 0 4px 12px var(--shadow-color);
+    padding: 20px;
+    flex: 1;
+    min-width: 320px;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.header-controls {
+    display: flex;
+    gap: 5px;
+}
+
+.calendar-header button {
+    background-color: transparent;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.calendar-header button:hover {
+    background-color: #f0f0f0;
+    transform: scale(1.05);
+}
+
+.calendar-header button:active {
+    transform: scale(0.95);
+}
+
+/* Эффект волны при нажатии */
+.calendar-header button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
+}
+
+.calendar-header button:active::after {
+    animation: ripple 0.6s ease-out;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0, 0);
+        opacity: 0.5;
+    }
+    20% {
+        transform: scale(25, 25);
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(40, 40);
+    }
+}
+
+.weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-bottom: 10px;
+}
+
+.weekday {
+    text-align: center;
+    font-weight: bold;
+    padding: 10px;
+    color: var(--text-secondary);
+}
+
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    border-radius: 5px;
+    transition: all 0.3s;
+    outline: none;
+}
+
+.calendar-day:hover {
+    background-color: #f0f0f0;
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+}
+
+.other-month {
+    color: var(--other-month-color);
+}
+
+.today {
+    background-color: var(--today-bg);
+    font-weight: bold;
+}
+
+.selected {
+    background-color: var(--selected-bg);
+    color: var(--selected-text);
+    animation: pulse 1.5s infinite;
+}
+
+.selected:hover {
+    background-color: var(--primary-hover);
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(24, 144, 255, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(24, 144, 255, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(24, 144, 255, 0);
+    }
+}
+
+/* Стили для клавиатурной навигации */
+.keyboard-focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Стили для drag-and-drop */
+.dragging-over {
+    background-color: rgba(24, 144, 255, 0.1) !important;
+    box-shadow: inset 0 0 0 2px var(--primary-color);
+    transform: scale(1.05);
+}
+
+.event-item.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+    background-color: var(--event-hover);
+}
+
+.event-indicator {
+    width: 5px;
+    height: 5px;
+    background-color: #ff4d4f;
+    border-radius: 50%;
+    position: absolute;
+    bottom: 5px;
+}
+
+.events-panel {
+    background-color: var(--card-bg);
+    border-radius: 10px;
+    box-shadow: 0 4px 12px var(--shadow-color);
+    padding: 20px;
+    flex: 1;
+    min-width: 300px;
+}
+
+.events-panel h3 {
+    margin-bottom: 15px;
+    color: var(--text-color);
+}
+
+.no-events {
+    color: var(--text-secondary);
+    font-style: italic;
+    margin: 20px 0;
+}
+
+.events-list {
+    margin-bottom: 20px;
+}
+
+.event-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    background-color: var(--event-bg);
+    transition: all 0.3s;
+    cursor: grab;
+    user-select: none; /* Предотвращает выделение текста при перетаскивании */
+}
+
+.event-item:hover {
+    background-color: var(--event-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.event-item.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+}
+
+.event-time {
+    font-weight: bold;
+    margin-right: 10px;
+    color: var(--primary-color);
+    min-width: 70px;
+}
+
+.event-title {
+    flex: 1;
+    color: var(--text-color);
+}
+
+.delete-btn {
+    background-color: transparent;
+    border: none;
+    color: #ff4d4f;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0 5px;
+}
+
+.add-event {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.add-event input {
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+}
+
+.add-event input[type="time"] {
+    width: 120px;
+}
+
+.add-event input[placeholder="Event title"] {
+    flex: 1;
+}
+
+.add-event button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.add-event button:hover {
+    background-color: var(--primary-hover);
+}
+
+.add-event button:disabled {
+    background-color: var(--border-color);
+    cursor: not-allowed;
+}
+
+/* Модальное окно подтверждения */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 20px;
+    max-width: 400px;
+    width: 100%;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.modal-btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.modal-btn-primary {
+    background-color: #1890ff;
+    color: white;
+}
+
+.modal-btn-primary:hover {
+    background-color: #40a9ff;
+}
+
+.modal-btn-secondary {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.modal-btn-secondary:hover {
+    background-color: #d9d9d9;
+}
+
+/* Стили для справки по горячим клавишам */
+.keyboard-shortcuts {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 20px;
+    z-index: 1000;
+    max-width: 400px;
+    width: 100%;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.shortcuts-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 10px;
+}
+
+.shortcuts-header h3 {
+    margin: 0;
+    color: #333;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #999;
+    transition: color 0.3s ease;
+}
+
+.close-btn:hover {
+    color: #333;
+}
+
+.shortcuts-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.shortcuts-list li {
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
+}
+
+.key {
+    display: inline-block;
+    background-color: #f5f5f5;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    padding: 2px 8px;
+    margin-right: 10px;
+    font-family: monospace;
+    min-width: 30px;
+    text-align: center;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+@media (max-width: 768px) {
+    #app {
+        flex-direction: column;
+    }
+    
+    .calendar-container, .events-panel {
+        width: 100%;
+    }
+}
