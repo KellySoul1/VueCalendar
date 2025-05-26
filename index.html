@@ -5,14 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Календарь Vue</title>
     <link rel="stylesheet" href="styles.css">
-    <!-- Vue.js CDN -->
+    <link rel="shortcut icon" href="#">
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
 </head>
 <body>
     <div id="app" tabindex="0" @keydown="handleKeyDown" ref="appRoot">
-        <!-- Панель управления -->
         <div class="control-panel">
-            <!-- Переключатель темы -->
             <div class="theme-toggle">
                 <label class="switch">
                     <input type="checkbox" id="themeToggle">
@@ -21,7 +19,7 @@
                 <span class="theme-label" id="themeLabel">Светлая тема</span>
             </div>
             
-            <!-- Поиск по событиям -->
+            
             <div class="search-container">
                 <input 
                     type="text" 
@@ -119,7 +117,7 @@
             </div>
         </div>
         
-        <!-- Модальное окно подтверждения -->
+        
         <div class="modal-overlay" v-if="showConfirmModal">
             <div class="modal-content">
                 <div class="modal-title">У вас есть несохраненные данные</div>
@@ -131,7 +129,7 @@
             </div>
         </div>
         
-        <!-- Справка по горячим клавишам -->
+        
         <div class="keyboard-shortcuts" v-if="showKeyboardShortcuts">
             <div class="shortcuts-header">
                 <h3>Горячие клавиши</h3>
@@ -151,13 +149,13 @@
 
     <script src="app.js"></script>
     
-    <!-- Простой JavaScript для переключения темы -->
+    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const themeToggle = document.getElementById('themeToggle');
             const themeLabel = document.getElementById('themeLabel');
             
-            // Загрузка темы из localStorage
+            
             const savedTheme = localStorage.getItem('darkTheme');
             if (savedTheme === 'true') {
                 document.documentElement.classList.add('dark-theme');
@@ -165,7 +163,7 @@
                 themeLabel.textContent = 'Тёмная тема';
             }
             
-            // Обработчик события переключения
+            
             themeToggle.addEventListener('change', function() {
                 if (this.checked) {
                     document.documentElement.classList.add('dark-theme');
