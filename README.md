@@ -45,6 +45,7 @@ VueCalendar/
 3. Откройте браузер и перейдите по адресу `http://localhost:8080`
 
 ## Технологии
+- JavaScript (ES6)
 - Vue.js -  популярный JavaScript фреймворк
 - HTML5/CSS3 - для разметки и стилизации
 - localStorage API - для хранения данных
